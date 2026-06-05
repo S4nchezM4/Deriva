@@ -17,7 +17,6 @@ const Terrain = (() => {
   function draw(cameraX, playerX) {
     push();
 
-    // Terrain fill
     fill(CONFIG.COLORS.TERRAIN_FILL);
     stroke(CONFIG.COLORS.TERRAIN_LINE);
     strokeWeight(2);
@@ -30,7 +29,6 @@ const Terrain = (() => {
     vertex(0, CONFIG.HEIGHT);
     endShape(CLOSE);
 
-    // Critical point markers
     for (let i = 0; i < criticalPoints.length; i++) {
       const cp = criticalPoints[i];
       if (collectedPoints.has(i)) continue;
@@ -38,7 +36,7 @@ const Terrain = (() => {
       if (sx < -30 || sx > CONFIG.WIDTH + 30) continue;
       const sy = getY(cp.x);
 
-      // Pulse when player is within 80 world units
+      // Pulse when player approaches — signals upcoming challenge
       const dist = playerX !== undefined ? Math.abs(cp.x - playerX) : 999;
       const s = dist < 80 ? 1 + 0.3 * Math.sin(frameCount * 0.22) : 1;
 

@@ -37,7 +37,6 @@ const Player = (() => {
   }
 
   function update(currentLevelFn) {
-    // Horizontal movement
     if (keys['ArrowLeft'] || keys['KeyA']) {
       state.vx = -CONFIG.MOVE_SPEED;
     } else if (keys['ArrowRight'] || keys['KeyD']) {
@@ -46,21 +45,16 @@ const Player = (() => {
       state.vx *= 0.85;
     }
 
-    // Slope effect via derivative
+    // f'(x) creates slope-dependent friction/acceleration
     const slope = derivative(currentLevelFn, state.x);
     state.vx -= slope * CONFIG.SLOPE_DAMPING * Math.abs(state.vx + 1);
 
-    // Gravity
     state.vy += CONFIG.GRAVITY;
-
-    // Update position
     state.x += state.vx;
     state.y += state.vy;
 
-    // Clamp world bounds
     state.x = Math.max(0, Math.min(CONFIG.WORLD_WIDTH - 1, state.x));
 
-    // Terrain collision
     const terrainY = Terrain.getY(state.x);
     if (state.y >= terrainY) {
       state.y = terrainY;
@@ -70,23 +64,19 @@ const Player = (() => {
       state.onGround = false;
     }
 
-    // Jump
     if (state.onGround && (keys['ArrowUp'] || keys['KeyW'] || keys['Space'])) {
       state.vy = CONFIG.JUMP_FORCE;
       state.onGround = false;
     }
 
-    // Trail
     state.trail.push({ x: state.x, y: state.y });
     if (state.trail.length > 12) state.trail.shift();
 
-    // Fall off screen
     if (state.y > CONFIG.HEIGHT + 100) {
       state.lives = Math.max(0, state.lives - 1);
       resetPosition();
     }
 
-    // Invincibility countdown
     if (state.invincible > 0) state.invincible--;
   }
 
@@ -105,7 +95,6 @@ const Player = (() => {
   function draw(cameraX) {
     push();
 
-    // Trail
     for (let i = 0; i < state.trail.length; i++) {
       const t = state.trail[i];
       const alpha = map(i, 0, state.trail.length - 1, 0, 150);
@@ -120,13 +109,11 @@ const Player = (() => {
 
     const sx = state.x - cameraX;
 
-    // Flicker when invincible
     if (state.invincible > 0 && frameCount % 6 < 3) {
       pop();
       return;
     }
 
-    // Player body
     stroke('#00ffcc');
     strokeWeight(2);
     fill(CONFIG.COLORS.PLAYER);

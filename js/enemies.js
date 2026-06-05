@@ -28,7 +28,7 @@ const Enemies = (() => {
       dir: 1,
       patrolRange: 50,
       corrupted: true,
-      spawnTimer: 120, // 2s grace period before it can damage the player
+      spawnTimer: 120, // grace period so player doesn't take instant damage
     });
   }
 
@@ -41,12 +41,11 @@ const Enemies = (() => {
 
       if (e.spawnTimer > 0) e.spawnTimer--;
 
-      // Patrol movement
       e.wx += e.dir * 1.2;
       if (e.wx > e.originX + e.patrolRange) e.dir = -1;
       if (e.wx < e.originX - e.patrolRange) e.dir = 1;
 
-      if (e.spawnTimer > 0) continue; // Not ready to collide yet
+      if (e.spawnTimer > 0) continue;
 
       const ey = Terrain.getY(e.wx);
       const dx = Math.abs(player.x - e.wx);
@@ -75,7 +74,6 @@ const Enemies = (() => {
       const ey = Terrain.getY(e.wx);
 
       if (e.corrupted) {
-        // Pulsing orange for corrupted anomalies
         const pulse = 0.5 + 0.5 * Math.sin(frameCount * 0.18);
         fill(lerpColor(color(CONFIG.COLORS.ENEMY_CORRUPTED), color('#ffff00'), pulse * 0.4));
         stroke('#aa4400');

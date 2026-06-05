@@ -66,10 +66,12 @@ npx serve .
 
 ### Controles
 
-| Acción       | Tecla                  |
-|--------------|------------------------|
-| Moverse      | A/D o ←/→              |
-| Saltar       | W, Espacio o ↑         |
-| Panel math   | H (toggle)             |
-| Subdivisiones N | [ / ]               |
-| Pausa        | ESC                    |
+| Acción                     | Tecla              |
+|----------------------------|--------------------|
+| Moverse                    | A/D o ←/→          |
+| Saltar                     | W, Espacio o ↑     |
+| Clasificar anomalía: máximo | M                 |
+| Clasificar anomalía: mínimo | N                 |
+| Subdivisiones N            | [ / ]              |
+| Panel f(x)                 | H (toggle)         |
+| Pausa                      | ESC                |

@@ -23,23 +23,20 @@ const HUD = (() => {
     noStroke();
     rect(0, 0, CONFIG.WIDTH, 36);
 
-    // Lives
     textSize(16);
     textAlign(LEFT, CENTER);
-    fill('#ff6666');
     for (let i = 0; i < 3; i++) {
       fill(i < lives ? '#ff6666' : '#444444');
       text('♥', 10 + i * 22, 18);
     }
 
-    // Level name
     fill(CONFIG.COLORS.HUD_TEXT);
     textSize(13);
     textFont('monospace');
     textAlign(CENTER, CENTER);
     text(levelName, CONFIG.WIDTH / 2, 18);
 
-    // Timer — drawn first so we know its width and can place the bar
+    // timer drawn first to calculate bar position
     const secs = Math.ceil(levelTimer / 60);
     const timerStr = '0:' + String(secs).padStart(2, '0');
     textSize(13);
@@ -47,27 +44,23 @@ const HUD = (() => {
     fill(secs < 10 ? '#ff4444' : CONFIG.COLORS.HUD_TEXT);
     text(timerStr, CONFIG.WIDTH - 8, 18);
 
-    // Energy bar — sits to the left of the timer with clear gap
     const barW = 130;
     const barH = 14;
     const barY = 11;
-    const barX = CONFIG.WIDTH - 8 - 46 - 8 - barW; // timer(46) + gap(8) + bar
+    const barX = CONFIG.WIDTH - 8 - 46 - 8 - barW;
 
-    // Label left of bar
     noStroke();
     fill('#666688');
     textSize(8);
     textAlign(RIGHT, CENTER);
     text('∫v dt', barX - 4, 18);
 
-    // Bar background + fill
     fill('#222244');
     rect(barX, barY, barW, barH, 3);
     const pct = Math.min(energy / energyGoal, 1);
     fill(pct >= 1 ? '#aa44ff' : '#4a90d9');
     rect(barX, barY, barW * pct, barH, 3);
 
-    // Value centered inside bar
     noStroke();
     fill('#ffffff');
     textSize(9);
@@ -100,7 +93,6 @@ const HUD = (() => {
 
     text('── ANÁLISIS f(x) ──', px + 8, y); y += lh;
 
-    // Truncate fnStr if too long
     const shortFn = fnStr.length > 30 ? fnStr.substring(0, 28) + '…' : fnStr;
     fill(CONFIG.COLORS.HUD_TEXT);
     text(shortFn, px + 8, y); y += lh;
@@ -137,7 +129,6 @@ const HUD = (() => {
     strokeWeight(1);
     rect(px, py, pw, ph, 4);
 
-    // Title & energy
     noStroke();
     fill('#4a90d9');
     textSize(10);
@@ -154,11 +145,9 @@ const HUD = (() => {
     const chartW = pw - 12;
     const chartH = ph - 28;
 
-    // Find max velocity for scaling
     let maxV = 0.1;
     for (const s of history) { if (s.v > maxV) maxV = s.v; }
 
-    // Draw Riemann rectangles
     const step = Math.floor(history.length / N) || 1;
     const rectW = chartW / N;
 
@@ -173,7 +162,6 @@ const HUD = (() => {
       rect(chartX + i * rectW, chartY + chartH - rh, rectW, rh);
     }
 
-    // Velocity curve overlay
     stroke(CONFIG.COLORS.VELOCITY_CRV);
     strokeWeight(1.5);
     noFill();
@@ -185,7 +173,6 @@ const HUD = (() => {
     }
     endShape();
 
-    // Axis
     stroke('#446688');
     strokeWeight(1);
     line(chartX, chartY + chartH, chartX + chartW, chartY + chartH);
@@ -223,7 +210,6 @@ const HUD = (() => {
     text('Tiempo restante: ' + Math.ceil(levelTimer / 60) + 's', CONFIG.WIDTH / 2, 212);
     text('Puntos críticos: ' + collectedCriticals + ' / ' + totalCriticals, CONFIG.WIDTH / 2, 234);
 
-    // Static Riemann visualization
     drawStaticRiemann(riemannHistory, riemannN, 160, 260, 480, 80);
 
     fill('#aaaaaa');
@@ -289,7 +275,6 @@ const HUD = (() => {
     textSize(18);
     text('Dra. Lyra rescatada', CONFIG.WIDTH / 2, 124);
 
-    // Level stats table
     fill(CONFIG.COLORS.HUD_TEXT);
     textSize(13);
     const cols = ['Nivel', 'Energía', 'Objetivo'];
@@ -310,7 +295,6 @@ const HUD = (() => {
       text(st.goal, colX[2], row);
     }
 
-    // 3 mini Riemann charts
     const miniW = 200;
     const miniH = 60;
     const gap = 20;
@@ -397,7 +381,6 @@ const HUD = (() => {
       return;
     }
 
-    // Active challenge box
     stroke('#4a90d9');
     fill('rgba(5,10,30,0.97)');
     strokeWeight(2);
@@ -406,7 +389,6 @@ const HUD = (() => {
 
     textFont('monospace');
 
-    // Title
     fill('#ffdd44');
     textSize(14);
     textAlign(CENTER, TOP);
@@ -417,7 +399,6 @@ const HUD = (() => {
     line(bx + 10, by + 34, bx + bw - 10, by + 34);
     noStroke();
 
-    // Math values
     textAlign(LEFT, TOP);
     fill('#aaccff');
     textSize(12);
@@ -431,7 +412,6 @@ const HUD = (() => {
     textSize(10);
     text("Recuerda: f''(x) < 0 → máximo  |  f''(x) > 0 → mínimo", bx + 18, by + 86);
 
-    // Answer options
     textSize(14);
     textAlign(CENTER, TOP);
     fill('#ffdd44');
@@ -439,7 +419,6 @@ const HUD = (() => {
     fill('#44ffaa');
     text('[N]  Mínimo local', CONFIG.WIDTH / 2, by + 134);
 
-    // Timer bar
     const pct = state.timeLeft / (CONFIG.CHALLENGE_TIME * 60);
     const barW = bw - 24;
     fill('#222244');

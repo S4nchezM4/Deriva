@@ -51,12 +51,9 @@ function draw() {
   }
 }
 
-// ─── MENU ────────────────────────────────────────────────────────────────────
-
 function drawMenu() {
   menuXOffset += 0.4;
 
-  // Animated sine wave background
   stroke('#1a3a6a');
   strokeWeight(2);
   noFill();
@@ -68,7 +65,6 @@ function drawMenu() {
   }
   endShape();
 
-  // Title
   noStroke();
   textFont('monospace');
   textAlign(CENTER, CENTER);
@@ -91,7 +87,6 @@ function drawMenu() {
   text('Movimiento: A/D ←/→   Salto: W/Espacio/↑   Desafío: [M] Máximo  [N] Mínimo', CONFIG.WIDTH / 2, 310);
   text('Subdivisiones N: [ ]   Panel matemático: H', CONFIG.WIDTH / 2, 330);
 
-  // Blinking prompt
   if (Math.floor(frameCount / 30) % 2 === 0) {
     fill('#ffffff');
     textSize(16);
@@ -99,12 +94,9 @@ function drawMenu() {
   }
 }
 
-// ─── INSTRUCTIONS ────────────────────────────────────────────────────────────
-
 function drawInstructions() {
   menuXOffset += 0.4;
 
-  // Same animated wave as menu
   stroke('#1a3a6a');
   strokeWeight(2);
   noFill();
@@ -124,7 +116,6 @@ function drawInstructions() {
   textSize(22);
   text('CÓMO JUGAR', CONFIG.WIDTH / 2, 18);
 
-  // Divider
   stroke('#333366');
   strokeWeight(1);
   line(40, 48, CONFIG.WIDTH - 40, 48);
@@ -134,7 +125,6 @@ function drawInstructions() {
   textAlign(LEFT, TOP);
   textSize(12);
 
-  // ── Left column: El desafío de clasificación ────────────────────────────────
   const lx = 44;
   let ly = 58;
 
@@ -177,7 +167,6 @@ function drawInstructions() {
   fill(CONFIG.COLORS.HUD_TEXT);
   text('  son ya enemigos — sáltalos encima', lx, ly);
 
-  // ── Right column: Física del terreno + Integral ─────────────────────────────
   const rx = CONFIG.WIDTH / 2 + 20;
   let ry = 58;
 
@@ -218,7 +207,6 @@ function drawInstructions() {
   fill('#888888');
   text('  la barra superior muestra E=actual/meta', rx, ry);
 
-  // ── Bottom bar: controls + prompt ──────────────────────────────────────────
   stroke('#333366');
   strokeWeight(1);
   line(40, CONFIG.HEIGHT - 74, CONFIG.WIDTH - 40, CONFIG.HEIGHT - 74);
@@ -236,8 +224,6 @@ function drawInstructions() {
   }
 }
 
-// ─── PLAYING ─────────────────────────────────────────────────────────────────
-
 function drawPlaying() {
   if (paused) {
     drawPauseOverlay();
@@ -246,26 +232,21 @@ function drawPlaying() {
 
   const level = LEVELS[currentLevelIndex];
 
-  // Camera follow with lerp
   const targetCamX = Player.get().x - CONFIG.WIDTH / 2.5;
   cameraX = lerp(cameraX, targetCamX, 0.08);
   cameraX = constrain(cameraX, 0, CONFIG.WORLD_WIDTH - CONFIG.WIDTH);
 
-  // Draw terrain with playerX for proximity pulse
   Terrain.draw(cameraX, Player.get().x);
-
-  // Check critical point collection (triggers challenge)
   checkCriticalCollections();
 
   // Draw portal
   drawPortal();
 
-  // Update and draw enemies, collect energy bonus
   const eBonus = Enemies.update();
   if (eBonus > 0) energy += eBonus;
   Enemies.draw(cameraX);
 
-  // Update challenge or player physics (mutually exclusive)
+  // physics pauses while challenge is open
   if (challengeState) {
     updateChallenge();
   } else {
@@ -273,7 +254,7 @@ function drawPlaying() {
   }
   Player.draw(cameraX);
 
-  // Timer and energy only tick when no challenge is active
+  // timer and energy don't tick during a challenge
   if (!challengeState) {
     levelTimer--;
     if (levelTimer <= 0) {
@@ -285,22 +266,17 @@ function drawPlaying() {
       levelTimer = CONFIG.LEVEL_TIME * 60;
     }
 
-    // Riemann history — rolling 240-sample window for visualization
     const spd = Math.abs(Player.get().vx);
     riemannHistory.push({ t: frameCount, v: spd });
     if (riemannHistory.length > 240) riemannHistory.shift();
-
-    // Energy accumulates as running Riemann sum: E = ∫v(t)dt
-    energy += spd * CONFIG.DT;
+    energy += spd * CONFIG.DT; // E = ∫v(t)dt
   }
 
-  // Game over check
   if (Player.get().lives <= 0) {
     gameState = 'GAME_OVER';
     return;
   }
 
-  // Zone detection: alert when entering/leaving danger zone
   if (!challengeState) {
     const currentFx = level.fn(Player.get().x);
     const inDanger = currentFx < level.enemyThreshold;
@@ -320,7 +296,6 @@ function drawPlaying() {
     }
   }
 
-  // Portal activation check
   const px = Player.get().x;
   const distToPortal = Math.abs(px - portalX);
   if (distToPortal < 30 && energy >= level.energyGoal) {
@@ -333,7 +308,6 @@ function drawPlaying() {
     return;
   }
 
-  // HUD
   const critPts = Terrain.getCriticalPoints();
   HUD.draw({
     lives: Player.get().lives,
@@ -375,8 +349,7 @@ function checkCriticalCollections() {
     const dy = Math.abs(player.y - cpY);
 
     if (dx < 20 && dy < 28) {
-      // Mark collected immediately so it doesn't re-trigger
-      Terrain.collectPoint(i);
+      Terrain.collectPoint(i); // mark before challenge opens so it can't re-trigger
 
       const fn = LEVELS[currentLevelIndex].fn;
       challengeState = {
@@ -404,10 +377,7 @@ function updateChallenge() {
   }
 
   challengeState.timeLeft--;
-  if (challengeState.timeLeft <= 0) {
-    // Timeout: point already gone, close silently
-    challengeState = null;
-  }
+  if (challengeState.timeLeft <= 0) challengeState = null;
 }
 
 function answerChallenge(answer) {
@@ -445,12 +415,10 @@ function drawPortal() {
   strokeWeight(3);
   ellipse(screenX, terrainY - r, r * 2, r * 2.5);
 
-  // Inner glow
   stroke(active ? '#cc88ff' : '#664488');
   strokeWeight(1.5);
   ellipse(screenX, terrainY - r, r * 1.2, r * 1.5);
 
-  // Label
   noStroke();
   fill(active ? '#aa44ff' : '#553377');
   textFont('monospace');
@@ -473,10 +441,7 @@ function drawPauseOverlay() {
   text('ESC para continuar', CONFIG.WIDTH / 2, CONFIG.HEIGHT / 2 + 40);
 }
 
-// ─── LEVEL COMPLETE ───────────────────────────────────────────────────────────
-
 function drawLevelCompleteScreen() {
-  // Still draw world behind
   Terrain.draw(cameraX);
   Enemies.draw(cameraX);
   Player.draw(cameraX);
@@ -494,13 +459,9 @@ function drawLevelCompleteScreen() {
   });
 }
 
-// ─── WIN ──────────────────────────────────────────────────────────────────────
-
 function drawWinScreen() {
   HUD.drawWin(levelStats);
 }
-
-// ─── INPUT ────────────────────────────────────────────────────────────────────
 
 function resolveKey() {
   if (keyCode === LEFT_ARROW)  return 'ArrowLeft';
@@ -542,7 +503,6 @@ function keyPressed() {
     }
   }
 
-  // Challenge answer keys (M = Máximo, N = Mínimo)
   if (gameState === 'PLAYING' && challengeState) {
     if (key === 'm' || key === 'M') answerChallenge('max');
     if (key === 'n' || key === 'N') answerChallenge('min');
@@ -553,8 +513,7 @@ function keyPressed() {
   if (key === '[') riemannN = Math.max(5, riemannN - 1);
   if (keyCode === ESCAPE && gameState === 'PLAYING') paused = !paused;
 
-  // Prevent default scroll on arrow keys / space
-  if ([32, 37, 38, 39, 40].includes(keyCode)) return false;
+  if ([32, 37, 38, 39, 40].includes(keyCode)) return false; // prevent scroll
 }
 
 function keyReleased() {
