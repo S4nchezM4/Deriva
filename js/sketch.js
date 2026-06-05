@@ -13,6 +13,9 @@ let menuXOffset = 0;
 let paused = false;
 let levelStats = [];
 let collectedCriticals = 0;
+let challengeState = null; // active anomaly classification challenge
+let zoneAlert = null;      // { message, timer, isWarning }
+let lastInDangerZone = null;
 
 function setup() {
   createCanvas(CONFIG.WIDTH, CONFIG.HEIGHT);
@@ -30,6 +33,9 @@ function loadLevel(index) {
   levelTimer = CONFIG.LEVEL_TIME * 60;
   cameraX = 0;
   collectedCriticals = 0;
+  challengeState = null;
+  zoneAlert = null;
+  lastInDangerZone = null;
 }
 
 function draw() {
@@ -82,8 +88,8 @@ function drawMenu() {
 
   fill('#666688');
   textSize(12);
-  text('Movimiento: A/D o ←/→   Salto: W/Espacio/↑   Panel: H', CONFIG.WIDTH / 2, 310);
-  text('Subdivisiones N: [ ]', CONFIG.WIDTH / 2, 330);
+  text('Movimiento: A/D ←/→   Salto: W/Espacio/↑   Desafío: [M] Máximo  [N] Mínimo', CONFIG.WIDTH / 2, 310);
+  text('Subdivisiones N: [ ]   Panel matemático: H', CONFIG.WIDTH / 2, 330);
 
   // Blinking prompt
   if (Math.floor(frameCount / 30) % 2 === 0) {
@@ -128,83 +134,89 @@ function drawInstructions() {
   textAlign(LEFT, TOP);
   textSize(12);
 
-  // ── Left column: Derivadas ──────────────────────────────────────────────────
+  // ── Left column: El desafío de clasificación ────────────────────────────────
   const lx = 44;
   let ly = 58;
 
-  fill('#4a90d9');
+  fill('#ffdd44');
   textSize(13);
-  text('── DERIVADAS ──', lx, ly); ly += lh + 4;
+  text('── CLASIFICAR ANOMALÍAS ──', lx, ly); ly += lh + 4;
 
   fill('#aaccff');
   textSize(11);
-  text('El terreno es la función f(x).', lx, ly); ly += lh;
-  text('Su pendiente f\'(x) afecta tu velocidad:', lx, ly); ly += lh + 4;
+  text('Al tocar ★ o ◆ aparece un DESAFÍO:', lx, ly); ly += lh + 2;
+
+  fill(CONFIG.COLORS.HUD_TEXT);
+  text('  Lee f\'\'(x) en la pantalla y decide:', lx, ly); ly += lh + 6;
 
   fill('#ffdd44');
-  text('f\'(x) > 0  ↗  pendiente sube', lx, ly); ly += lh;
-  fill(CONFIG.COLORS.HUD_TEXT);
-  text('   → frenas al trepar', lx, ly); ly += lh + 4;
-
+  textSize(12);
+  text('  [M]  si  f\'\'(x) < 0  →  Máximo local', lx, ly); ly += lh + 2;
   fill('#44ffaa');
-  text('f\'(x) < 0  ↘  pendiente baja', lx, ly); ly += lh;
-  fill(CONFIG.COLORS.HUD_TEXT);
-  text('   → aceleras al descender', lx, ly); ly += lh + 4;
+  text('  [N]  si  f\'\'(x) > 0  →  Mínimo local', lx, ly); ly += lh + 8;
 
   fill('#aaccff');
-  text('f\'(x) ≈ 0  →  PUNTO CRÍTICO', lx, ly); ly += lh + 2;
-
-  fill('#ffdd44');
-  text('  ★  f\'\'(x) < 0  →  máximo local', lx, ly); ly += lh;
+  textSize(11);
+  text('Resultado:', lx, ly); ly += lh;
+  fill('#44ff88');
+  text('  ¡Correcto!  →  ★ SUPER-SALTO  /  ◆ +ENERGÍA', lx, ly); ly += lh;
+  fill('#ff6666');
+  text('  Incorrecto  →  la anomalía se corrompe', lx, ly); ly += lh;
   fill(CONFIG.COLORS.HUD_TEXT);
-  text('     pisa la estrella: SUPER-SALTO', lx, ly); ly += lh + 4;
+  text('               y se vuelve un enemigo activo', lx, ly); ly += lh + 8;
 
-  fill('#44ffaa');
-  text('  ◆  f\'\'(x) > 0  →  mínimo local', lx, ly); ly += lh;
-  fill(CONFIG.COLORS.HUD_TEXT);
-  text('     recoge el diamante: +ENERGÍA', lx, ly); ly += lh + 4;
+  fill('#aaccff');
+  textSize(11);
+  text('Pista: la regla siempre aparece', lx, ly); ly += lh;
+  fill('#888888');
+  text('  f\'\'(x) < 0 → cima (máx)  |  f\'\'(x) > 0 → valle (mín)', lx, ly); ly += lh + 8;
 
   fill('#ff9999');
-  text('  ✕  donde f(x) < umbral  →  ENEMIGOS', lx, ly); ly += lh;
+  textSize(11);
+  text('Anomalías sueltas: donde f(x) < umbral', lx, ly); ly += lh;
   fill(CONFIG.COLORS.HUD_TEXT);
-  text('     sáltales encima para eliminarlos', lx, ly);
+  text('  son ya enemigos — sáltalos encima', lx, ly);
 
-  // ── Right column: Integral ──────────────────────────────────────────────────
+  // ── Right column: Física del terreno + Integral ─────────────────────────────
   const rx = CONFIG.WIDTH / 2 + 20;
   let ry = 58;
 
   fill('#4a90d9');
   textSize(13);
-  text('── INTEGRAL DE RIEMANN ──', rx, ry); ry += lh + 4;
+  text('── FÍSICA Y ENERGÍA ──', rx, ry); ry += lh + 4;
 
   fill('#aaccff');
   textSize(11);
-  text('Tu energía se acumula como:', rx, ry); ry += lh;
+  text('El terreno es f(x). Su pendiente te afecta:', rx, ry); ry += lh + 4;
 
+  fill('#ffdd44');
+  text('  f\'(x) > 0  ↗  cuesta arriba  →  frenas', rx, ry); ry += lh;
+  fill('#44ffaa');
+  text('  f\'(x) < 0  ↘  cuesta abajo  →  aceleras', rx, ry); ry += lh;
+  fill('#aaccff');
+  text('  f\'(x) ≈ 0  →  estás en un punto crítico', rx, ry); ry += lh + 8;
+
+  fill('#4a90d9');
+  textSize(13);
+  text('Energía = Integral de velocidad:', rx, ry); ry += lh + 2;
   fill('#00ffcc');
   textSize(13);
-  text('  E = ∫v(t)dt', rx, ry); ry += lh + 2;
+  text('  E = ∫v(t)dt  ≈  Σ v(tᵢ)·Δt', rx, ry); ry += lh + 4;
+
+  fill(CONFIG.COLORS.HUD_TEXT);
   textSize(11);
-  text('    ≈ Σ v(tᵢ)·Δt', rx, ry); ry += lh + 4;
-
-  fill(CONFIG.COLORS.HUD_TEXT);
-  text('Cada frame añade un rectángulo', rx, ry); ry += lh;
-  text('de ancho Δt y alto v(t).', rx, ry); ry += lh + 4;
-
-  fill('#aaccff');
-  text('Panel (esquina inf-der):', rx, ry); ry += lh;
-  fill(CONFIG.COLORS.HUD_TEXT);
-  text('  N rectángulos ≈ área bajo la curva', rx, ry); ry += lh;
-  text('  teclas [ ] cambian N (5–50)', rx, ry); ry += lh + 4;
+  text('Panel inferior-derecha: N rectángulos', rx, ry); ry += lh;
+  text('bajo la curva v(t). Más N = mejor aprox.', rx, ry); ry += lh;
+  fill('#888888');
+  text('  teclas [ ] cambian N  (5 – 50)', rx, ry); ry += lh + 8;
 
   fill('#aa44ff');
+  textSize(11);
   text('Portal al final del nivel:', rx, ry); ry += lh;
   fill(CONFIG.COLORS.HUD_TEXT);
-  text('  llégale con E ≥ umbral para abrirlo', rx, ry); ry += lh + 4;
-
-  fill('#aaccff');
-  text('Tecla H: mostrar/ocultar panel', rx, ry); ry += lh;
-  text('  con f(x), f\'(x) y f\'\'(x) en tiempo real', rx, ry);
+  text('  llégale con  E ≥ umbral  para abrirlo', rx, ry); ry += lh;
+  fill('#888888');
+  text('  la barra superior muestra E=actual/meta', rx, ry);
 
   // ── Bottom bar: controls + prompt ──────────────────────────────────────────
   stroke('#333366');
@@ -215,7 +227,7 @@ function drawInstructions() {
   fill('#666688');
   textSize(12);
   textAlign(CENTER, TOP);
-  text('Moverse: A / D  o  ← →      Saltar: W / Espacio / ↑      Pausa: ESC', CONFIG.WIDTH / 2, CONFIG.HEIGHT - 66);
+  text('Moverse: A/D ← →   Saltar: W/Espacio/↑   Desafío: [M] Máximo  [N] Mínimo   Pausa: ESC', CONFIG.WIDTH / 2, CONFIG.HEIGHT - 66);
 
   if (Math.floor(frameCount / 30) % 2 === 0) {
     fill('#ffffff');
@@ -239,10 +251,10 @@ function drawPlaying() {
   cameraX = lerp(cameraX, targetCamX, 0.08);
   cameraX = constrain(cameraX, 0, CONFIG.WORLD_WIDTH - CONFIG.WIDTH);
 
-  // Draw terrain
-  Terrain.draw(cameraX);
+  // Draw terrain with playerX for proximity pulse
+  Terrain.draw(cameraX, Player.get().x);
 
-  // Check critical point collection
+  // Check critical point collection (triggers challenge)
   checkCriticalCollections();
 
   // Draw portal
@@ -253,28 +265,34 @@ function drawPlaying() {
   if (eBonus > 0) energy += eBonus;
   Enemies.draw(cameraX);
 
-  // Update and draw player
-  Player.update(level.fn);
+  // Update challenge or player physics (mutually exclusive)
+  if (challengeState) {
+    updateChallenge();
+  } else {
+    Player.update(level.fn);
+  }
   Player.draw(cameraX);
 
-  // Timer
-  levelTimer--;
-  if (levelTimer <= 0) {
-    Player.get().lives = Math.max(0, Player.get().lives - 1);
-    if (Player.get().lives <= 0) {
-      gameState = 'GAME_OVER';
-      return;
+  // Timer and energy only tick when no challenge is active
+  if (!challengeState) {
+    levelTimer--;
+    if (levelTimer <= 0) {
+      Player.get().lives = Math.max(0, Player.get().lives - 1);
+      if (Player.get().lives <= 0) {
+        gameState = 'GAME_OVER';
+        return;
+      }
+      levelTimer = CONFIG.LEVEL_TIME * 60;
     }
-    levelTimer = CONFIG.LEVEL_TIME * 60;
+
+    // Riemann history — rolling 240-sample window for visualization
+    const spd = Math.abs(Player.get().vx);
+    riemannHistory.push({ t: frameCount, v: spd });
+    if (riemannHistory.length > 240) riemannHistory.shift();
+
+    // Energy accumulates as running Riemann sum: E = ∫v(t)dt
+    energy += spd * CONFIG.DT;
   }
-
-  // Riemann history — rolling 240-sample window for visualization
-  const spd = Math.abs(Player.get().vx);
-  riemannHistory.push({ t: frameCount, v: spd });
-  if (riemannHistory.length > 240) riemannHistory.shift();
-
-  // Energy accumulates as running Riemann sum: add this frame's rectangle
-  energy += spd * CONFIG.DT;
 
   // Game over check
   if (Player.get().lives <= 0) {
@@ -282,9 +300,28 @@ function drawPlaying() {
     return;
   }
 
+  // Zone detection: alert when entering/leaving danger zone
+  if (!challengeState) {
+    const currentFx = level.fn(Player.get().x);
+    const inDanger = currentFx < level.enemyThreshold;
+    if (lastInDangerZone !== inDanger) {
+      lastInDangerZone = inDanger;
+      zoneAlert = {
+        message: inDanger
+          ? '⚠ f(x) < ' + level.enemyThreshold + '  →  zona de anomalías'
+          : '✓ f(x) > 0  →  zona segura',
+        timer: 150,
+        isWarning: inDanger,
+      };
+    }
+    if (zoneAlert) {
+      zoneAlert.timer--;
+      if (zoneAlert.timer <= 0) zoneAlert = null;
+    }
+  }
+
   // Portal activation check
   const px = Player.get().x;
-  const portalScreenX = portalX - cameraX;
   const distToPortal = Math.abs(px - portalX);
   if (distToPortal < 30 && energy >= level.energyGoal) {
     levelStats[currentLevelIndex] = {
@@ -314,9 +351,19 @@ function drawPlaying() {
     collectedCriticals,
     totalCriticals: critPts.length,
   });
+
+  // Zone alert overlay
+  HUD.drawZoneAlert(zoneAlert);
+
+  // Challenge overlay (on top of everything)
+  if (challengeState) {
+    HUD.drawChallenge(challengeState);
+  }
 }
 
 function checkCriticalCollections() {
+  if (challengeState) return; // Don't trigger new challenge while one is active
+
   const player = Player.get();
   const critPts = Terrain.getCriticalPoints();
 
@@ -328,14 +375,57 @@ function checkCriticalCollections() {
     const dy = Math.abs(player.y - cpY);
 
     if (dx < 20 && dy < 28) {
+      // Mark collected immediately so it doesn't re-trigger
       Terrain.collectPoint(i);
-      collectedCriticals++;
-      if (cp.type === 'max') {
-        Player.superJump();
-      } else {
-        energy += 20;
-      }
+
+      const fn = LEVELS[currentLevelIndex].fn;
+      challengeState = {
+        cpIndex: i,
+        cp: { ...cp },
+        cpY,
+        d1: derivative(fn, cp.x),
+        d2: secondDerivative(fn, cp.x),
+        timeLeft: CONFIG.CHALLENGE_TIME * 60,
+        feedback: null,
+        feedbackTimer: 0,
+      };
+      break;
     }
+  }
+}
+
+function updateChallenge() {
+  if (!challengeState) return;
+
+  if (challengeState.feedback !== null) {
+    challengeState.feedbackTimer--;
+    if (challengeState.feedbackTimer <= 0) challengeState = null;
+    return;
+  }
+
+  challengeState.timeLeft--;
+  if (challengeState.timeLeft <= 0) {
+    // Timeout: point already gone, close silently
+    challengeState = null;
+  }
+}
+
+function answerChallenge(answer) {
+  if (!challengeState || challengeState.feedback !== null) return;
+
+  const correct = answer === challengeState.cp.type;
+  challengeState.feedback = correct ? 'correct' : 'wrong';
+  challengeState.feedbackTimer = 100;
+
+  if (correct) {
+    collectedCriticals++;
+    if (challengeState.cp.type === 'max') {
+      Player.superJump();
+    } else {
+      energy += 20;
+    }
+  } else {
+    Enemies.spawnCorrupted(challengeState.cp.x);
   }
 }
 
@@ -450,6 +540,12 @@ function keyPressed() {
       loadLevel(0);
       gameState = 'MENU';
     }
+  }
+
+  // Challenge answer keys (M = Máximo, N = Mínimo)
+  if (gameState === 'PLAYING' && challengeState) {
+    if (key === 'm' || key === 'M') answerChallenge('max');
+    if (key === 'n' || key === 'N') answerChallenge('min');
   }
 
   if (key === 'h' || key === 'H') showMathPanel = !showMathPanel;

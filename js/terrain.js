@@ -14,7 +14,7 @@ const Terrain = (() => {
     return baseline - currentLevel.fn(worldX);
   }
 
-  function draw(cameraX) {
+  function draw(cameraX, playerX) {
     push();
 
     // Terrain fill
@@ -38,19 +38,24 @@ const Terrain = (() => {
       if (sx < -30 || sx > CONFIG.WIDTH + 30) continue;
       const sy = getY(cp.x);
 
+      // Pulse when player is within 80 world units
+      const dist = playerX !== undefined ? Math.abs(cp.x - playerX) : 999;
+      const s = dist < 80 ? 1 + 0.3 * Math.sin(frameCount * 0.22) : 1;
+
       if (cp.type === 'max') {
-        drawStar(sx, sy - 18, CONFIG.COLORS.CRITICAL_MAX);
+        drawStar(sx, sy - 18, CONFIG.COLORS.CRITICAL_MAX, s);
       } else {
-        drawDiamond(sx, sy - 14, CONFIG.COLORS.CRITICAL_MIN);
+        drawDiamond(sx, sy - 14, CONFIG.COLORS.CRITICAL_MIN, s);
       }
     }
 
     pop();
   }
 
-  function drawStar(x, y, col) {
+  function drawStar(x, y, col, s = 1) {
     push();
     translate(x, y);
+    scale(s);
     fill(col);
     stroke(col);
     strokeWeight(1);
@@ -64,9 +69,10 @@ const Terrain = (() => {
     pop();
   }
 
-  function drawDiamond(x, y, col) {
+  function drawDiamond(x, y, col, s = 1) {
     push();
     translate(x, y);
+    scale(s);
     fill(col);
     stroke(col);
     strokeWeight(1);

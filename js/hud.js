@@ -52,7 +52,7 @@ const HUD = (() => {
     fill(CONFIG.COLORS.HUD_TEXT);
     textSize(10);
     textAlign(LEFT, CENTER);
-    text(Math.floor(pct * 100) + '%', barX + barW + 5, 18);
+    text('E=' + Math.round(energy) + '/' + energyGoal, barX + barW + 5, 18);
 
     // Timer
     const secs = Math.ceil(levelTimer / 60);
@@ -132,7 +132,7 @@ const HUD = (() => {
     textAlign(LEFT, TOP);
     text('v(t)', px + 6, py + 6);
     textAlign(RIGHT, TOP);
-    text('E ≈ ' + energy.toFixed(1), px + pw - 6, py + 6);
+    text('∫v dt ≈ ' + energy.toFixed(1), px + pw - 6, py + 6);
 
     if (history.length < 2) { pop(); return; }
 
@@ -336,5 +336,138 @@ const HUD = (() => {
     pop();
   }
 
-  return { draw, drawLevelComplete, drawWin, drawGameOver };
+  function drawChallenge(state) {
+    if (!state) return;
+    push();
+
+    fill('rgba(0,0,0,0.72)');
+    noStroke();
+    rect(0, 0, CONFIG.WIDTH, CONFIG.HEIGHT);
+
+    const bw = 340;
+    const bh = state.feedback ? 160 : 230;
+    const bx = CONFIG.WIDTH / 2 - bw / 2;
+    const by = CONFIG.HEIGHT / 2 - bh / 2 - 20;
+
+    if (state.feedback) {
+      const ok = state.feedback === 'correct';
+      stroke(ok ? '#00ff88' : '#ff4444');
+      fill(ok ? 'rgba(0,40,20,0.97)' : 'rgba(40,0,0,0.97)');
+      strokeWeight(2);
+      rect(bx, by, bw, bh, 6);
+      noStroke();
+
+      fill(ok ? '#00ff88' : '#ff4444');
+      textFont('monospace');
+      textSize(22);
+      textAlign(CENTER, TOP);
+      text(ok ? '¡Correcto!' : 'Incorrecto', CONFIG.WIDTH / 2, by + 18);
+
+      const typeStr = state.cp.type === 'max' ? 'Máximo local' : 'Mínimo local';
+      fill(CONFIG.COLORS.HUD_TEXT);
+      textSize(12);
+      text("f''(x) = " + state.d2.toFixed(3) + '  →  ' + typeStr, CONFIG.WIDTH / 2, by + 58);
+
+      if (ok) {
+        fill('#aaffcc');
+        textSize(13);
+        text(state.cp.type === 'max' ? '+SUPER-SALTO' : '+20 ENERGÍA', CONFIG.WIDTH / 2, by + 88);
+      } else {
+        fill('#ff9999');
+        textSize(11);
+        text('La anomalía se corrompió → ¡cuidado!', CONFIG.WIDTH / 2, by + 88);
+        fill('#888888');
+        textSize(10);
+        text('f\'\'(x) < 0 → Máximo  |  f\'\'(x) > 0 → Mínimo', CONFIG.WIDTH / 2, by + 114);
+      }
+      pop();
+      return;
+    }
+
+    // Active challenge box
+    stroke('#4a90d9');
+    fill('rgba(5,10,30,0.97)');
+    strokeWeight(2);
+    rect(bx, by, bw, bh, 6);
+    noStroke();
+
+    textFont('monospace');
+
+    // Title
+    fill('#ffdd44');
+    textSize(14);
+    textAlign(CENTER, TOP);
+    text('⚡  ANOMALÍA DETECTADA', CONFIG.WIDTH / 2, by + 14);
+
+    stroke('#333366');
+    strokeWeight(1);
+    line(bx + 10, by + 34, bx + bw - 10, by + 34);
+    noStroke();
+
+    // Math values
+    textAlign(LEFT, TOP);
+    fill('#aaccff');
+    textSize(12);
+    text("f'(x)  = " + state.d1.toFixed(4) + '  ≈  0  (punto crítico)', bx + 18, by + 44);
+
+    const d2Hint = state.d2 < 0 ? '  < 0' : '  > 0';
+    fill('#00ffcc');
+    text("f''(x) = " + state.d2.toFixed(4) + d2Hint, bx + 18, by + 62);
+
+    fill('#666688');
+    textSize(10);
+    text("Recuerda: f''(x) < 0 → máximo  |  f''(x) > 0 → mínimo", bx + 18, by + 86);
+
+    // Answer options
+    textSize(14);
+    textAlign(CENTER, TOP);
+    fill('#ffdd44');
+    text('[M]  Máximo local', CONFIG.WIDTH / 2, by + 110);
+    fill('#44ffaa');
+    text('[N]  Mínimo local', CONFIG.WIDTH / 2, by + 134);
+
+    // Timer bar
+    const pct = state.timeLeft / (CONFIG.CHALLENGE_TIME * 60);
+    const barW = bw - 24;
+    fill('#222244');
+    rect(bx + 12, by + bh - 34, barW, 10, 3);
+    fill(pct > 0.4 ? '#4a90d9' : '#ff4444');
+    rect(bx + 12, by + bh - 34, barW * pct, 10, 3);
+    fill('#888888');
+    textSize(9);
+    textAlign(CENTER, TOP);
+    text('⏱ ' + (state.timeLeft / 60).toFixed(1) + ' s', CONFIG.WIDTH / 2, by + bh - 20);
+
+    pop();
+  }
+
+  function drawZoneAlert(alert) {
+    if (!alert || alert.timer <= 0) return;
+    push();
+    const alpha = Math.min(1, alert.timer / 30);
+
+    textFont('monospace');
+    textSize(12);
+    textAlign(CENTER, CENTER);
+
+    const msg = alert.message;
+    const tw = textWidth(msg) + 24;
+    const th = 26;
+    const tx = CONFIG.WIDTH / 2 - tw / 2;
+    const ty = CONFIG.HEIGHT - 108;
+
+    fill(`rgba(0,0,0,${(alpha * 0.75).toFixed(2)})`);
+    noStroke();
+    rect(tx, ty, tw, th, 4);
+
+    if (alert.isWarning) {
+      fill(`rgba(255,140,40,${alpha.toFixed(2)})`);
+    } else {
+      fill(`rgba(50,220,100,${alpha.toFixed(2)})`);
+    }
+    text(msg, CONFIG.WIDTH / 2, ty + th / 2);
+    pop();
+  }
+
+  return { draw, drawLevelComplete, drawWin, drawGameOver, drawChallenge, drawZoneAlert };
 })();
