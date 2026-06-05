@@ -36,11 +36,12 @@ function draw() {
   background(CONFIG.COLORS.BG);
 
   switch (gameState) {
-    case 'MENU':    drawMenu();          break;
-    case 'PLAYING': drawPlaying();       break;
-    case 'LEVEL_COMPLETE': drawLevelCompleteScreen(); break;
-    case 'GAME_OVER': HUD.drawGameOver(); break;
-    case 'WIN':     drawWinScreen();     break;
+    case 'MENU':         drawMenu();                  break;
+    case 'INSTRUCTIONS': drawInstructions();           break;
+    case 'PLAYING':      drawPlaying();                break;
+    case 'LEVEL_COMPLETE': drawLevelCompleteScreen();  break;
+    case 'GAME_OVER':    HUD.drawGameOver();           break;
+    case 'WIN':          drawWinScreen();              break;
   }
 }
 
@@ -89,6 +90,137 @@ function drawMenu() {
     fill('#ffffff');
     textSize(16);
     text('ENTER para comenzar', CONFIG.WIDTH / 2, 395);
+  }
+}
+
+// ─── INSTRUCTIONS ────────────────────────────────────────────────────────────
+
+function drawInstructions() {
+  menuXOffset += 0.4;
+
+  // Same animated wave as menu
+  stroke('#1a3a6a');
+  strokeWeight(2);
+  noFill();
+  beginShape();
+  for (let sx = 0; sx <= CONFIG.WIDTH; sx += 3) {
+    const wx = sx + menuXOffset;
+    const y = CONFIG.HEIGHT * 0.6 - 60 * Math.sin(wx * 0.015) - 30 * Math.sin(wx * 0.03);
+    vertex(sx, y);
+  }
+  endShape();
+
+  // Header
+  noStroke();
+  textFont('monospace');
+  textAlign(CENTER, TOP);
+  fill('#aa44ff');
+  textSize(22);
+  text('CÓMO JUGAR', CONFIG.WIDTH / 2, 18);
+
+  // Divider
+  stroke('#333366');
+  strokeWeight(1);
+  line(40, 48, CONFIG.WIDTH - 40, 48);
+  noStroke();
+
+  const lh = 18;
+  textAlign(LEFT, TOP);
+  textSize(12);
+
+  // ── Left column: Derivadas ──────────────────────────────────────────────────
+  const lx = 44;
+  let ly = 58;
+
+  fill('#4a90d9');
+  textSize(13);
+  text('── DERIVADAS ──', lx, ly); ly += lh + 4;
+
+  fill('#aaccff');
+  textSize(11);
+  text('El terreno es la función f(x).', lx, ly); ly += lh;
+  text('Su pendiente f\'(x) afecta tu velocidad:', lx, ly); ly += lh + 4;
+
+  fill('#ffdd44');
+  text('f\'(x) > 0  ↗  pendiente sube', lx, ly); ly += lh;
+  fill(CONFIG.COLORS.HUD_TEXT);
+  text('   → frenas al trepar', lx, ly); ly += lh + 4;
+
+  fill('#44ffaa');
+  text('f\'(x) < 0  ↘  pendiente baja', lx, ly); ly += lh;
+  fill(CONFIG.COLORS.HUD_TEXT);
+  text('   → aceleras al descender', lx, ly); ly += lh + 4;
+
+  fill('#aaccff');
+  text('f\'(x) ≈ 0  →  PUNTO CRÍTICO', lx, ly); ly += lh + 2;
+
+  fill('#ffdd44');
+  text('  ★  f\'\'(x) < 0  →  máximo local', lx, ly); ly += lh;
+  fill(CONFIG.COLORS.HUD_TEXT);
+  text('     pisa la estrella: SUPER-SALTO', lx, ly); ly += lh + 4;
+
+  fill('#44ffaa');
+  text('  ◆  f\'\'(x) > 0  →  mínimo local', lx, ly); ly += lh;
+  fill(CONFIG.COLORS.HUD_TEXT);
+  text('     recoge el diamante: +ENERGÍA', lx, ly); ly += lh + 4;
+
+  fill('#ff9999');
+  text('  ✕  donde f(x) < umbral  →  ENEMIGOS', lx, ly); ly += lh;
+  fill(CONFIG.COLORS.HUD_TEXT);
+  text('     sáltales encima para eliminarlos', lx, ly);
+
+  // ── Right column: Integral ──────────────────────────────────────────────────
+  const rx = CONFIG.WIDTH / 2 + 20;
+  let ry = 58;
+
+  fill('#4a90d9');
+  textSize(13);
+  text('── INTEGRAL DE RIEMANN ──', rx, ry); ry += lh + 4;
+
+  fill('#aaccff');
+  textSize(11);
+  text('Tu energía se acumula como:', rx, ry); ry += lh;
+
+  fill('#00ffcc');
+  textSize(13);
+  text('  E = ∫v(t)dt', rx, ry); ry += lh + 2;
+  textSize(11);
+  text('    ≈ Σ v(tᵢ)·Δt', rx, ry); ry += lh + 4;
+
+  fill(CONFIG.COLORS.HUD_TEXT);
+  text('Cada frame añade un rectángulo', rx, ry); ry += lh;
+  text('de ancho Δt y alto v(t).', rx, ry); ry += lh + 4;
+
+  fill('#aaccff');
+  text('Panel (esquina inf-der):', rx, ry); ry += lh;
+  fill(CONFIG.COLORS.HUD_TEXT);
+  text('  N rectángulos ≈ área bajo la curva', rx, ry); ry += lh;
+  text('  teclas [ ] cambian N (5–50)', rx, ry); ry += lh + 4;
+
+  fill('#aa44ff');
+  text('Portal al final del nivel:', rx, ry); ry += lh;
+  fill(CONFIG.COLORS.HUD_TEXT);
+  text('  llégale con E ≥ umbral para abrirlo', rx, ry); ry += lh + 4;
+
+  fill('#aaccff');
+  text('Tecla H: mostrar/ocultar panel', rx, ry); ry += lh;
+  text('  con f(x), f\'(x) y f\'\'(x) en tiempo real', rx, ry);
+
+  // ── Bottom bar: controls + prompt ──────────────────────────────────────────
+  stroke('#333366');
+  strokeWeight(1);
+  line(40, CONFIG.HEIGHT - 74, CONFIG.WIDTH - 40, CONFIG.HEIGHT - 74);
+  noStroke();
+
+  fill('#666688');
+  textSize(12);
+  textAlign(CENTER, TOP);
+  text('Moverse: A / D  o  ← →      Saltar: W / Espacio / ↑      Pausa: ESC', CONFIG.WIDTH / 2, CONFIG.HEIGHT - 66);
+
+  if (Math.floor(frameCount / 30) % 2 === 0) {
+    fill('#ffffff');
+    textSize(15);
+    text('ENTER para comenzar', CONFIG.WIDTH / 2, CONFIG.HEIGHT - 42);
   }
 }
 
@@ -299,6 +431,8 @@ function keyPressed() {
 
   if (keyCode === ENTER) {
     if (gameState === 'MENU') {
+      gameState = 'INSTRUCTIONS';
+    } else if (gameState === 'INSTRUCTIONS') {
       loadLevel(0);
       gameState = 'PLAYING';
     } else if (gameState === 'LEVEL_COMPLETE') {

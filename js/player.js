@@ -18,6 +18,7 @@ const Player = (() => {
     state.vx = 0;
     state.vy = 0;
     state.onGround = false;
+    state.lives = 3;
     state.invincible = 0;
     state.trail = [];
   }
