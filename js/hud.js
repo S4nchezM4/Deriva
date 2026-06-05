@@ -39,27 +39,40 @@ const HUD = (() => {
     textAlign(CENTER, CENTER);
     text(levelName, CONFIG.WIDTH / 2, 18);
 
-    // Energy bar
-    const barX = CONFIG.WIDTH - 200;
-    const barW = 120;
-    const barH = 12;
-    const barY = 12;
+    // Timer — drawn first so we know its width and can place the bar
+    const secs = Math.ceil(levelTimer / 60);
+    const timerStr = '0:' + String(secs).padStart(2, '0');
+    textSize(13);
+    textAlign(RIGHT, CENTER);
+    fill(secs < 10 ? '#ff4444' : CONFIG.COLORS.HUD_TEXT);
+    text(timerStr, CONFIG.WIDTH - 8, 18);
+
+    // Energy bar — sits to the left of the timer with clear gap
+    const barW = 130;
+    const barH = 14;
+    const barY = 11;
+    const barX = CONFIG.WIDTH - 8 - 46 - 8 - barW; // timer(46) + gap(8) + bar
+
+    // Label left of bar
+    noStroke();
+    fill('#666688');
+    textSize(8);
+    textAlign(RIGHT, CENTER);
+    text('∫v dt', barX - 4, 18);
+
+    // Bar background + fill
     fill('#222244');
     rect(barX, barY, barW, barH, 3);
     const pct = Math.min(energy / energyGoal, 1);
     fill(pct >= 1 ? '#aa44ff' : '#4a90d9');
     rect(barX, barY, barW * pct, barH, 3);
-    fill(CONFIG.COLORS.HUD_TEXT);
-    textSize(10);
-    textAlign(LEFT, CENTER);
-    text('E=' + Math.round(energy) + '/' + energyGoal, barX + barW + 5, 18);
 
-    // Timer
-    const secs = Math.ceil(levelTimer / 60);
-    fill(secs < 10 ? '#ff4444' : CONFIG.COLORS.HUD_TEXT);
-    textSize(13);
-    textAlign(RIGHT, CENTER);
-    text('0:' + String(secs).padStart(2, '0'), CONFIG.WIDTH - 5, 18);
+    // Value centered inside bar
+    noStroke();
+    fill('#ffffff');
+    textSize(9);
+    textAlign(CENTER, CENTER);
+    text(Math.round(energy) + ' / ' + energyGoal, barX + barW / 2, 18);
 
     pop();
   }

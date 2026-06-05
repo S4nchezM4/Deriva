@@ -8,11 +8,12 @@ const LEVELS = [
   },
   {
     name: "Nivel 2 — Cúbica Caótica",
+    // Normalized cubic: t=(x-2000)/2000 ∈ [-1,1] keeps values bounded to ≈[-130,130]
     fn: (x) => {
-      const cx = x - 2000;
-      return 0.00015 * Math.pow(cx, 3) - 0.06 * Math.pow(cx, 2) + 50 * Math.cos(x * 0.022);
+      const t = (x - 2000) / 2000;
+      return 80 * Math.pow(t, 3) + 50 * Math.cos(x * 0.022);
     },
-    fnStr: "f(x) = 0.00015(x-2000)³ - 0.06(x-2000)² + 50·cos(0.022x)",
+    fnStr: "f(x) = 80·((x-2000)/2000)³ + 50·cos(0.022x)",
     enemyThreshold: -20,
     energyGoal: CONFIG.ENERGY_THRESHOLDS[1],
   },
