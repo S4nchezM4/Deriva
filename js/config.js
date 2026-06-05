@@ -1,0 +1,31 @@
+const CONFIG = {
+  WIDTH: 800,
+  HEIGHT: 500,
+  WORLD_WIDTH: 4000,
+  BASELINE: 0.62,
+  DT: 1 / 60,
+  GRAVITY: 0.5,
+  JUMP_FORCE: -11,
+  MOVE_SPEED: 3.5,
+  SLOPE_DAMPING: 0.018,
+  LEVEL_TIME: 60,
+  RIEMANN_N_DEFAULT: 15,
+  ENERGY_THRESHOLDS: [180, 240, 300],
+
+  COLORS: {
+    BG:           '#0a0a14',
+    TERRAIN_FILL: '#1a2a4a',
+    TERRAIN_LINE: '#4a90d9',
+    PLAYER:       '#ffffff',
+    PLAYER_TRAIL: '#00ffcc',
+    ENEMY:        '#ff4444',
+    CRITICAL_MAX: '#ffdd44',
+    CRITICAL_MIN: '#44ffaa',
+    PORTAL:       '#aa44ff',
+    HUD_BG:       'rgba(0,0,0,0.72)',
+    HUD_TEXT:     '#e0e0e0',
+    RIEMANN_FILL: 'rgba(74,144,217,0.35)',
+    RIEMANN_LINE: '#4a90d9',
+    VELOCITY_CRV: '#00ffcc',
+  }
+};
