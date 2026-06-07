@@ -504,8 +504,15 @@ function keyPressed() {
   }
 
   if (gameState === 'PLAYING' && challengeState) {
-    if (key === 'm' || key === 'M') answerChallenge('max');
-    if (key === 'n' || key === 'N') answerChallenge('min');
+      if (challengeState.feedback !== null) {
+          // Solo skipear si el feedback lleva al menos 60 frames (1 segundo)
+          if (challengeState.feedbackTimer <= 40) {
+              challengeState = null;
+          }
+      } else {
+          if (key === 'm' || key === 'M') answerChallenge('max');
+          if (key === 'n' || key === 'N') answerChallenge('min');
+      }
   }
 
   if (key === 'h' || key === 'H') showMathPanel = !showMathPanel;
