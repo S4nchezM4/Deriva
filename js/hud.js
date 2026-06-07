@@ -377,6 +377,12 @@ const HUD = (() => {
         textSize(10);
         text('f\'\'(x) < 0 → Máximo  |  f\'\'(x) > 0 → Mínimo', CONFIG.WIDTH / 2, by + 114);
       }
+      if (Math.floor(frameCount / 20) % 2 === 0) {
+        fill('#888888');
+        textSize(10);
+        textAlign(CENTER, TOP);
+        text('Presioná cualquier tecla para continuar', CONFIG.WIDTH / 2, by + bh - 20);
+      }
       pop();
       return;
     }
