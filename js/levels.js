@@ -8,7 +8,7 @@ const LEVELS = [
   },
   {
     name: "Nivel 2 — Cúbica Caótica",
-    // Normalized cubic: t=(x-2000)/2000 ∈ [-1,1] keeps values bounded to ≈[-130,130]
+   
     fn: (x) => {
       const t = (x - 2000) / 2000;
       return 80 * Math.pow(t, 3) + 50 * Math.cos(x * 0.022);

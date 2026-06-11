@@ -36,7 +36,6 @@ const HUD = (() => {
     textAlign(CENTER, CENTER);
     text(levelName, CONFIG.WIDTH / 2, 18);
 
-    // timer drawn first to calculate bar position
     const secs = Math.ceil(levelTimer / 60);
     const timerStr = '0:' + String(secs).padStart(2, '0');
     textSize(13);

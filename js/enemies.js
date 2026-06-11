@@ -28,7 +28,7 @@ const Enemies = (() => {
       dir: 1,
       patrolRange: 50,
       corrupted: true,
-      spawnTimer: 120, // grace period so player doesn't take instant damage
+      spawnTimer: 120,
     });
   }
 
